@@ -29,8 +29,9 @@ const ImageSlot: React.FC<{
   imageState: ImageState;
   onImageUpload: (file: File) => void;
   onFaceSelect: (faceId: string) => void;
+  onResetImage: () => void;
   isLoading: boolean;
-}> = ({ title, imageState, onImageUpload, onFaceSelect, isLoading }) => {
+}> = ({ title, imageState, onImageUpload, onFaceSelect, onResetImage, isLoading }) => {
   const { url, faces, selectedFaceId } = imageState;
 
   return (
@@ -69,9 +70,9 @@ const ImageSlot: React.FC<{
             </p>
             <div className="flex justify-center gap-2 flex-wrap bg-slate-900/50 p-2 rounded-md">
                 {faces.map(face => (
-                     <img 
+                     <img
                         key={face.id}
-                        src={face.thumbnailUrl} 
+                        src={face.thumbnailUrl}
                         alt={`Face ${parseInt(face.id) + 1}`}
                         onClick={() => onFaceSelect(face.id)}
                         className={`w-14 h-14 rounded-full object-cover cursor-pointer transition-all duration-200 hover:scale-110 ${
@@ -83,7 +84,15 @@ const ImageSlot: React.FC<{
         </div>
       )}
       {url && faces.length === 0 && !isLoading && (
-        <p className="text-yellow-500 text-sm">No faces were detected in this image.</p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-yellow-500 text-sm text-center">No faces were detected in this image.</p>
+          <button
+            onClick={onResetImage}
+            className="bg-yellow-500 text-slate-900 font-medium py-2 px-4 rounded-md text-sm hover:bg-yellow-400 transition-all duration-200"
+          >
+            Upload Different Image
+          </button>
+        </div>
       )}
     </div>
   );
@@ -125,6 +134,12 @@ const Workspace: React.FC<WorkspaceProps> = ({ onProcessingComplete }) => {
       setState(prevState => ({...prevState, selectedFaceId: faceId}));
   }
 
+  const handleResetImage = (type: 'source' | 'target') => {
+      const setState = type === 'source' ? setSourceState : setTargetState;
+      setState(initialImageState);
+      setError(null);
+  }
+
   const handleGenerate = async () => {
     if (!sourceState.file || !targetState.file || !sourceState.selectedFaceId || !targetState.selectedFaceId || !targetState.url) {
         setError("Please upload both images and select a face from each.");
@@ -163,18 +178,20 @@ const Workspace: React.FC<WorkspaceProps> = ({ onProcessingComplete }) => {
   return (
     <div className="w-full max-w-7xl flex flex-col items-center animate-fade-in gap-6">
       <div className="w-full flex flex-col md:flex-row gap-6">
-        <ImageSlot 
-            title="Source Image (The Face)" 
-            imageState={sourceState} 
+        <ImageSlot
+            title="Source Image (The Face)"
+            imageState={sourceState}
             onImageUpload={(file) => handleImageUpload(file, 'source')}
             onFaceSelect={(id) => handleFaceSelect(id, 'source')}
+            onResetImage={() => handleResetImage('source')}
             isLoading={isLoading}
         />
-        <ImageSlot 
-            title="Target Image (The Scene)" 
-            imageState={targetState} 
+        <ImageSlot
+            title="Target Image (The Scene)"
+            imageState={targetState}
             onImageUpload={(file) => handleImageUpload(file, 'target')}
             onFaceSelect={(id) => handleFaceSelect(id, 'target')}
+            onResetImage={() => handleResetImage('target')}
             isLoading={isLoading}
         />
       </div>
